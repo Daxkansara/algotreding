@@ -1,0 +1,6 @@
+auto stock refresh
+full time wise price deference in stock given in persentage
+show stock price in the search name also
+make buy and sell option
+add indicator, and make i runable
+then apply ai in indicator

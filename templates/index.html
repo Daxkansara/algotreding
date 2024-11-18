@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Algo Trading Platform</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+</head>
+<body class="bg-gray-100 text-gray-900">
+
+    <!-- Header with Stock Prices and Search Bar -->
+    <header class="bg-blue-500 p-6 shadow-lg">
+        <h1 class="text-white text-3xl font-bold text-center mb-4">Algo Trading Platform</h1>
+
+        <!-- Search Bar -->
+        <form method="get" action="{{ url_for('search') }}" class="flex justify-center mb-6">
+            <input type="text" name="query" placeholder="Search for a stock symbol" 
+                   class="w-1/2 p-2 border rounded-l-lg shadow-sm">
+            <button type="submit" class="bg-blue-600 text-white px-4 rounded-r-lg">Search</button>
+        </form>
+
+        <!-- Dynamic Stock Prices -->
+        <div id="stock-prices" class="flex justify-center items-center space-x-4 text-white text-lg">
+            <div id="loading" class="text-center">
+                <p class="text-white">Loading stock prices...</p>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="container mx-auto mt-10">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-10">
+            <!-- Trading Options Form -->
+            <div class="bg-white p-8 shadow-md rounded-lg">
+                <h2 class="text-xl font-bold mb-6">Run a Backtest</h2>
+                <form id="trading-form" class="space-y-6">
+                    <!-- Stock Picker Dropdown -->
+                    <div>
+                        <label for="stock" class="block mb-2 text-gray-700 font-semibold">Select Stock</label>
+                        <select id="stock" name="stock" class="block w-full p-3 border rounded-lg shadow-sm">
+                            <!-- Options will be populated dynamically using JavaScript -->
+                        </select>
+                    </div>
+
+                    <!-- Strategy Selector -->
+                    <div>
+                        <label for="strategy" class="block mb-2 text-gray-700 font-semibold">Choose Strategy</label>
+                        <select id="strategy" class="block w-full p-3 border rounded-lg shadow-sm">
+                            <option value="ma">Moving Averages</option>
+                            <option value="rsi">RSI</option>
+                        </select>
+                    </div>
+
+                    <!-- Date Pickers -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <label for="start-date" class="block mb-2 text-gray-700 font-semibold">Start Date</label>
+                            <input type="date" id="start-date" class="block w-full p-3 border rounded-lg shadow-sm">
+                        </div>
+                        <div>
+                            <label for="end-date" class="block mb-2 text-gray-700 font-semibold">End Date</label>
+                            <input type="date" id="end-date" class="block w-full p-3 border rounded-lg shadow-sm">
+                        </div>
+                    </div>
+
+                    <!-- Run Backtest Button -->
+                    <div class="flex justify-center">
+                        <button type="button" id="run-backtest" 
+                                class="w-full bg-blue-500 text-white py-3 rounded-lg shadow-lg hover:bg-blue-600 transition-all duration-200 ease-in-out">
+                            Run Backtest
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Simulation & Results Section -->
+            <div class="bg-white p-8 shadow-md rounded-lg">
+                <h2 class="text-xl font-bold mb-6">Simulation & Results</h2>
+                <p class="mb-4 text-gray-700">Run a backtest to view trading performance over time. Results will be displayed here after execution.</p>
+                <div id="results" class="mt-6">
+                    <div class="text-gray-700">
+                        <p class="italic">Results will appear here after running the backtest.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-blue-500 p-6 mt-10 shadow-lg">
+        <p class="text-white text-center">&copy; 2024 Algo Trading Platform. All rights reserved.</p>
+    </footer>
+
+    <!-- JavaScript to Fetch and Update Stock Data Dynamically -->
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            populateStockOptions();
+        });
+        
+        async function populateStockOptions() {
+            try {
+                const response = await fetch("/fetch-symbols");
+                if (!response.ok) throw new Error("Failed to fetch stock symbols.");
+        
+                const data = await response.json();
+                const stockSelect = document.getElementById('stock');
+        
+                stockSelect.innerHTML = '<option value="" disabled selected>Select a stock</option>';
+                
+                data.symbols.forEach(symbol => {
+                    const option = document.createElement('option');
+                    option.value = symbol;
+                    option.textContent = symbol;
+                    stockSelect.appendChild(option);
+                });
+            } catch (error) {
+                console.error("Error fetching stock symbols:", error);
+            }
+        }
+        
+        async function fetchStockPrices() {
+            try {
+                const response = await fetch('/fetch-prices');
+                if (!response.ok) throw new Error("Failed to fetch stock prices.");
+                const stockData = await response.json();
+                const stockPricesDiv = document.getElementById('stock-prices');
+                stockPricesDiv.innerHTML = '';
+
+                // Display stock prices dynamically
+                Object.entries(stockData).forEach(([symbol, price]) => {
+                    const stockElement = document.createElement('a');
+                    stockElement.href = `/stock/${symbol}`;
+                    stockElement.classList.add('bg-blue-600', 'px-4', 'py-2', 'rounded-lg', 'shadow-lg', 'hover:bg-blue-700', 'transition-all', 'duration-200', 'ease-in-out');
+                    stockElement.innerHTML = `<span class="font-semibold">${symbol}:</span> <span>${price} USD</span>`;
+                    stockPricesDiv.appendChild(stockElement);
+                });
+            } catch (error) {
+                console.error("Error fetching stock prices:", error);
+            }
+        }
+
+        async function populateStockOptions() {
+            try {
+                const response = await fetch('/fetch-symbols');
+                if (!response.ok) throw new Error("Failed to fetch stock symbols.");
+                
+                const data = await response.json();
+                const stockSelect = document.getElementById('stock');
+                
+                // Clear any existing options and add default placeholder
+                stockSelect.innerHTML = '<option value="" disabled selected>Select a stock</option>';
+                
+                // Populate dropdown options
+                data.symbols.forEach(symbol => {
+                    const option = document.createElement('option');
+                    option.value = symbol;
+                    option.textContent = symbol;
+                    stockSelect.appendChild(option);
+                });
+            } catch (error) {
+                console.error("Error fetching stock symbols:", error);
+            }
+        }
+
+        document.getElementById('run-backtest').addEventListener('click', async () => {
+            const stock = document.getElementById('stock').value;
+            const strategy = document.getElementById('strategy').value;
+            const startDate = document.getElementById('start-date').value;
+            const endDate = document.getElementById('end-date').value;
+
+            if (!stock || !strategy || !startDate || !endDate) {
+                alert("Please fill in all fields before running the backtest.");
+                return;
+            }
+
+            try {
+                const response = await fetch(`/run-backtest?stock=${stock}&strategy=${strategy}&start_date=${startDate}&end_date=${endDate}`);
+                if (!response.ok) throw new Error("Failed to run backtest.");
+                
+                const results = await response.json();
+                const resultsDiv = document.getElementById('results');
+                if (results.summary) {
+                    resultsDiv.innerHTML = `<p>${results.summary.description}</p><p>Total Return: ${results.summary.total_return}</p><p>Max Drawdown: ${results.summary.max_drawdown}</p>`;
+                } else {
+                    resultsDiv.innerHTML = '<p>No results returned. Please try again.</p>';
+                }
+            } catch (error) {
+                console.error("Error running backtest:", error);
+                alert("Failed to run backtest. Please try again later.");
+            }
+        });
+
+        window.onload = () => {
+            fetchStockPrices();
+            populateStockOptions();
+        };
+        setInterval(fetchStockPrices, 60000);
+    </script>
+</body>
+</html>

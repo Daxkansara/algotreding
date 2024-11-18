@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ symbol }} - Stock Details</title>
+    <!-- Add Tailwind CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+</head>
+<body class="bg-gray-100 text-gray-900">
+    <!-- Header -->
+    <header class="bg-blue-500 p-6 shadow-lg">
+        <h1 class="text-white text-3xl font-bold text-center">{{ symbol }} - Stock Details</h1>
+    </header>
+
+    <!-- Main Content -->
+    <main class="container mx-auto mt-10">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-10">
+            <!-- Stock Overview -->
+            <div class="bg-white p-8 shadow-md rounded-lg">
+                <h2 class="text-xl font-bold mb-6">{{ symbol }} Overview</h2>
+                <table class="table-auto w-full mb-6">
+                    <tbody>
+                        <tr>
+                            <td class="text-gray-700 font-semibold">Current Price:</td>
+                            <td class="text-gray-900">{{ stock_data['Close'].iloc[-1] }} USD</td>
+                        </tr>
+                        <tr>
+                            <td class="text-gray-700 font-semibold">Highest Price:</td>
+                            <td class="text-gray-900">{{ stock_data['High'].max() }} USD</td>
+                        </tr>
+                        <tr>
+                            <td class="text-gray-700 font-semibold">Lowest Price:</td>
+                            <td class="text-gray-900">{{ stock_data['Low'].min() }} USD</td>
+                        </tr>
+                        <tr>
+                            <td class="text-gray-700 font-semibold">Volume:</td>
+                            <td class="text-gray-900">{{ stock_data['Volume'].iloc[-1] }}</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Prediction Section -->
+            <div class="bg-white p-8 shadow-md rounded-lg">
+                <h2 class="text-xl font-bold mb-6">Price Prediction</h2>
+                <div>
+                    <p class="text-gray-700">Our algorithm predicts that the future price of <span class="font-semibold">{{ symbol }}</span> could reach:</p>
+                    <div class="text-2xl font-bold text-green-500 my-4">
+                        {{ prediction_price }} USD
+                    </div>
+                    <p class="text-gray-600">This is based on historical data and various technical indicators. Please note that this is just a prediction and not financial advice.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Chart Section -->
+        <div class="bg-white p-8 shadow-md rounded-lg mt-10">
+            <h2 class="text-xl font-bold mb-6">Stock Price Movement & Signals</h2>
+            <img src="{{ plot_url }}" alt="{{ symbol }} Stock Chart" class="w-full rounded-lg shadow-lg">
+        </div>
+
+        <!-- Signals Table -->
+        <div class="bg-white p-8 shadow-md rounded-lg mt-10">
+            <h2 class="text-xl font-bold mb-6">Generated Trading Signals</h2>
+            <table class="table-auto w-full bg-gray-50 shadow-md rounded-lg">
+                <thead>
+                    <tr class="bg-blue-500 text-white">
+                        <th class="px-4 py-2">Date</th>
+                        <th class="px-4 py-2">Open</th>
+                        <th class="px-4 py-2">Close</th>
+                        <th class="px-4 py-2">Signal</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for date, row in stock_data.iterrows() %}
+                    <tr class="text-gray-700">
+                        <td class="border px-4 py-2">{{ date }}</td>
+                        <td class="border px-4 py-2">{{ row['Open'] }}</td>
+                        <td class="border px-4 py-2">{{ row['Close'] }}</td>
+                        <td class="border px-4 py-2">{{ row['Signal'] }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-blue-500 p-6 mt-10 shadow-lg">
+        <p class="text-white text-center">&copy; 2024 Algo Trading Platform. All rights reserved.</p>
+    </footer>
+</body>
+</html>
